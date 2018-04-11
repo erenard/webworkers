@@ -1,4 +1,4 @@
-console.log('start')
+console.log('message-logger')
 import 'subworkers'
 import Worker from './distribute.worker.js'
 
