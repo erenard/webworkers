@@ -7,6 +7,7 @@
     "main": "node node/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "eslint": "eslint **/*.js",
+    "eslint:fix": "eslint **/*.js --fix",
     "start:dev": "webpack-dev-server"
   },
   "repository": {
