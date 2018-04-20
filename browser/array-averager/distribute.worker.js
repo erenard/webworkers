@@ -23,7 +23,7 @@ function handleExecutionMessage (event) {
 onmessage = (event) => {
   switch (event.data.type) {
   case `initialize`:
-    createWorkers(event.data.workerCount)
+    workers.push(...createWorkers(event.data.workerCount))
     break
   case `averageArray`:
     handleAverageArray(event.data)
@@ -35,7 +35,6 @@ onmessage = (event) => {
 function createWorkers (workerCount) {
   function initializeExecuteWorker () {
     const worker = new ExecuteWorker()
-    
     worker.onmessage = handleExecutionMessage
     return worker
   }
