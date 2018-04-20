@@ -1,11 +1,9 @@
 import 'subworkers'
-
 import ExecuteWorker from './execute.worker.js'
 
-let workers = []
-let workerCount = 0
+const workers = []
 let pendingWorkerCount = 0
-let results = []
+const results = []
 
 function handleExecutionMessage (event) {
   if (event.data.type === `done`) {
@@ -19,48 +17,52 @@ function handleExecutionMessage (event) {
       })
     }
   }
+  return true
 }
 
 onmessage = (event) => {
-  let type = event.data.type
-  switch (type) {
+  switch (event.data.type) {
   case `initialize`:
-    handleInitialize(event.data)
+    createWorkers(event.data.workerCount)
     break
   case `averageArray`:
     handleAverageArray(event.data)
     break
   }
+  return true
 }
 
-function handleInitialize (data) {
+function createWorkers (workerCount) {
   function initializeExecuteWorker () {
-    let worker = new ExecuteWorker()
+    const worker = new ExecuteWorker()
+    
     worker.onmessage = handleExecutionMessage
     return worker
   }
-  workerCount = data.workerCount
-  workers = Array.from({ length: workerCount }, (_, i) => initializeExecuteWorker(i))
+  return Array.from({ length: workerCount }, (_, i) => initializeExecuteWorker(i))
 }
 
 function handleAverageArray (data) {
   const uint8Array = new Uint8Array(data.arrayBuffer)
   const length = uint8Array.length
-  const subLength = length / workerCount
-  workers.forEach((worker, workerIndex) => {
-    let begin = Math.floor(subLength * workerIndex)
-    let end = Math.floor(subLength * (workerIndex + 1))
-    const detachableCopy = new Uint8Array(length)
-    detachableCopy.set(uint8Array)
-    pendingWorkerCount++
-    workers[workerIndex].postMessage(
-      {
+  const subLength = length / workers.length
+  return workers
+    .map((worker, index) => {
+      pendingWorkerCount++
+      return {
         type: `average`,
-        begin,
-        end,
-        arrayBuffer: detachableCopy.buffer,
-      },
-      [detachableCopy.buffer]
-    )
-  })
+        begin: Math.floor(subLength * index),
+        end: Math.floor(subLength * (index + 1)),
+        arrayBuffer: cloneTypedArray(uint8Array).buffer,
+      }
+    })
+    .map((message, index) => {
+      return workers[index].postMessage(message, [message.arrayBuffer])
+    })
+}
+
+function cloneTypedArray (typedArray) {
+  const clone = new Uint8Array(typedArray.length)
+  clone.set(typedArray)
+  return clone
 }

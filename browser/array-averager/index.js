@@ -2,7 +2,9 @@ import 'subworkers'
 import Worker from './distribute.worker.js'
 
 const length = 1024 * 1024
-const uint8Array = new Uint8Array(Array.from({ length }, () => Math.random() * 20))
+const uint8Array = new Uint8Array(
+  Array.from({ length }, () => Math.random() * 20)
+)
 const worker = new Worker()
 
 worker.onmessage = function(event) {
@@ -16,7 +18,10 @@ worker.postMessage({
   workerCount: 30,
 })
 
-worker.postMessage({
-  type: `averageArray`,
-  arrayBuffer: uint8Array.buffer,
-}, [uint8Array.buffer])
+worker.postMessage(
+  {
+    type: `averageArray`,
+    arrayBuffer: uint8Array.buffer,
+  },
+  [uint8Array.buffer]
+)

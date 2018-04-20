@@ -1,4 +1,3 @@
-
 import { rangeArray } from '../fp-utils'
 
 onmessage = (event) => {
