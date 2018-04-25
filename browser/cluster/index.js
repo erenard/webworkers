@@ -1,27 +1,20 @@
 import 'subworkers'
-import Cluster from './cluster.js'
+import Cluster from './cluster'
+import worker from './execute.worker'
 
 const length = 1024 * 1024
 const uint8Array = new Uint8Array(
   Array.from({ length }, () => Math.random() * 20)
 )
-const worker = new Worker()
 
-worker.onmessage = function(event) {
-  if (event.data.type === `ready`) {
-    console.log(`done`, event.data)
-  }
-}
+const cluster = Cluster(worker)
 
-worker.postMessage({
-  type: `initialize`,
-  workerCount: 30,
-})
-
-worker.postMessage(
-  {
-    type: `averageArray`,
-    arrayBuffer: uint8Array.buffer,
-  },
-  [uint8Array.buffer]
-)
+cluster({
+  type: `averageArray`,
+  begin: 0,
+  end: length,
+  arrayBuffer: uint8Array.buffer,
+}, [uint8Array.buffer])
+  .then(event => {
+    console.log(`Done`, event.data)
+  })
